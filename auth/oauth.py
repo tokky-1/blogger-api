@@ -30,30 +30,21 @@ def create_token(data: dict):
     token = jwt.encode(payload, KEY, algorithm=ALGORITHM)
     return token
 
-def verify_token(token: str):
-     print(" this Received token:", token)
-     payload = jwt.decode(token, KEY, algorithms=[ALGORITHM])
-     if time.time() > payload.get("exp"):
-             raise HTTPException(
-                 status_code=status.HTTP_401_UNAUTHORIZED,
-                 detail="Token has expired"
-             )
-     return payload
-     
-def get_blogger(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-     print("Received token:", token)
-     payload = verify_token(token)
-     username = payload.get("sub")
-     if username is None:
-         raise HTTPException(
-             status_code=status.HTTP_401_UNAUTHORIZED,
-             detail="Invalid token payload"
-        )
-     user = db.query(Blogger).filter(Blogger.username == username).first()
-     if user is None:
-         raise HTTPException(
-             status_code=status.HTTP_401_UNAUTHORIZED,
-             detail="User not found"
-         )
-     return user
 
+def get_blogger(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(Blogger).filter(Blogger.username == username).first()
+    if user is None:
+        raise credentials_exception
+    return user

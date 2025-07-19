@@ -10,6 +10,6 @@ class createBloggertModel(bloggerModel):
     password : str = Field(default="password",description="password of the User")
 
 class updateBloggerModel(BaseModel):
-    username : Optional[str] = Field(description="User name  ") 
-    fullname:  Optional[str] = Field(description=" User's fullname")
+    username : Optional[str] = Field(None,description="User name ") 
+    fullname:  Optional[str] = Field(None,description=" User's fullname")
     password :  Optional[str] = Field(default="password",description="password of the User")
