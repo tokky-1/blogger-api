@@ -22,7 +22,6 @@ headers = {
 }
 
 
-
 def create_token(data: dict):
     payload=data.copy()
     expire = datetime.utcnow() + timedelta(minutes=float(EXP))

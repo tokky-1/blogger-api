@@ -1,11 +1,12 @@
-from fastapi import  HTTPException,status,Depends
+from fastapi import  HTTPException,status,Depends, UploadFile, File, Form
+
 from sqlalchemy.orm import Session 
-from .model import Blogger,Post
+from .model import Blogger,Post,PostFile
 from database.connect import get_db
 from auth.hashing import verifyhash
 from auth.oauth import get_blogger
 from models.bloggermodel import updateBloggerModel as UBM
-
+import os
 
 def verify_user(username:str,password:str,db:Session = Depends(get_db)):
    blogger = db.query(Blogger).filter(Blogger.username == username).first()
@@ -55,8 +56,8 @@ def edit_blogger(update,username:str,db:Session=Depends(get_db)):
    return blogger_db
 
 #delete profile
-def del_blogger(db:Session,db_user:int):
-    exist = db.query(Blogger).filter(Blogger.id == db_user ).first()
+def del_blogger(db:Session,blogger_db):
+    exist = db.query(Blogger).filter(Blogger.username == blogger_db).first()
     if exist :
         db.delete(exist)
         db.commit()
@@ -66,3 +67,93 @@ def del_blogger(db:Session,db_user:int):
 def get_all_blogger(db:Session):
     return db.query(Blogger).all()
     
+def get_a_blogger(blogger_db,db:Session):
+   exist =db.query(Blogger).filter(Blogger.username == blogger_db).first()
+   if exist :
+      return blogger_db
+   raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+# view post history
+def get_all_posts(db: Session = Depends(get_db),current_blogger: Blogger= Depends(get_blogger)):
+    posts = db.query(Post).filter(Post.author_id == current_blogger.id).all()
+    return posts
+
+##post
+
+MAX_TOTAL_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_EXTENSIONS = { ".jpg", ".jpeg", ".png", ".gif",".mp4", ".avi", ".mov",".pdf", ".docx", ".txt"}
+async def create_post(title,content,acct_id,uploads=None,db: Session = Depends(get_db)):
+   total_size = 0
+   saved_files = []
+
+    # Read and validates all files 
+   if uploads:
+      for file in uploads:
+         content_data = await file.read()
+         file_size = len(content_data)
+         total_size += file_size
+         
+         if total_size > MAX_TOTAL_SIZE:
+                raise HTTPException(status_code=400, detail="Total file size exceeds 10MB limit.")
+
+         _, ext = os.path.splitext(file.filename.lower())
+         if ext not in ALLOWED_EXTENSIONS:
+                raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.filename}")
+
+         saved_files.append({
+                "filename": file.filename,
+                "content_type": file.content_type,
+                "data": content_data
+            })
+
+    # Save post
+   new_post = Post(title=title, content=content, author_id=acct_id)
+   db.add(new_post)
+   db.flush()  # Ensure we get post.id
+
+    # Save files validated
+   for file in saved_files:
+        db_file = PostFile(
+            filename=file["filename"],
+            content_type=file["content_type"],
+            file_data=file["data"],
+            post_id=new_post.id
+        )
+        db.add(db_file)
+
+   db.commit()
+   db.refresh(new_post)
+
+   return {"message": "Post created successfully", "post_id": new_post.id}
+
+def get_all_post(db:Session):
+   read= db.query(Post).all()
+   return read
+
+def edit_post(post_id:int, updated_data,db:Session=Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
+   post_query = db.query(Post).filter(Post.id == post_id).first()
+   
+   if not post_query:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+   if post_query.author_id != current_blogger.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this post")  
+   
+   post_query.update(updated_data.dict)
+   db.commit()
+   db.refresh(post_query)
+   return post_query
+
+def delete_post(post_id:int,db:Session=Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
+   post_query = db.query(Post).filter(Post.id == post_id).first()
+   
+   if not post_query:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+   if post_query.author_id != current_blogger.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this post")  
+   
+   db.delete(post_query)
+   db.commit()
+   raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+   
