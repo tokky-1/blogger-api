@@ -20,8 +20,8 @@ async def create_new_post(
 
          
 @postRouter.patch("/update")
-def update_post(post:UPM,id,db:Session = Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
-    return edit_post(db=db, post_id= id,updated_data=post,current_blogger=current_blogger)
+def update_post(id:int,post:UPM,db:Session = Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
+    return edit_post(post_id = id,updated_data=post,db=db,current_blogger=current_blogger)
 
 @postRouter.delete("/delete/{name}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(db:Session = Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):

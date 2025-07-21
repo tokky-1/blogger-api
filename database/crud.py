@@ -139,7 +139,9 @@ def edit_post(post_id:int, updated_data,db:Session=Depends(get_db),current_blogg
    if post_query.author_id != current_blogger.id:
         raise HTTPException(status_code=403, detail="Not authorized to edit this post")  
    
-   post_query.update(updated_data.dict)
+   for field, value in updated_data.dict(exclude_unset=True).items():
+        setattr(post_query, field, value)
+    
    db.commit()
    db.refresh(post_query)
    return post_query
