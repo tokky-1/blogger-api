@@ -159,3 +159,9 @@ def delete_post(post_id:int,db:Session=Depends(get_db),current_blogger: Blogger 
    db.commit()
    raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
    
+    
+def get_a_post(post_db,db:Session):
+   exist =db.query(Post).filter(Post.title == post_db).first()
+   if exist :
+      return post_db
+   raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

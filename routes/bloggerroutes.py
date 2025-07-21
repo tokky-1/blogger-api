@@ -15,8 +15,8 @@ async def create_new_blogger(blogger: CBM,db:Session = Depends(get_db)):
     return create_blogger(db = db,uname = blogger.username,fname=blogger.fullname,email=blogger.email,pword = hashedpassword)
 
 @bloggerRouter.post("/Log-in")
-def login (name:str,pword:str,db:Session = Depends(get_db)):
-    return sign_in(username=name,password=pword,db=db)
+async def login (name:str,pword:str,db:Session = Depends(get_db)):
+    return await sign_in(username=name,password=pword,db=db)
          
 @bloggerRouter.patch("/update")
 def update_blogger(blogger: UBM,db:Session = Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
@@ -26,7 +26,7 @@ def update_blogger(blogger: UBM,db:Session = Depends(get_db),current_blogger: Bl
 def delete_blogger(db:Session = Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
    return del_blogger(db=db, blogger_db= current_blogger.username)
 
-@bloggerRouter.get("/students")
+@bloggerRouter.get("/Bloggers")
 def getAllBlogger(db:Session = Depends(get_db)):
    return get_all_blogger(db = db)
 
