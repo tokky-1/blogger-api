@@ -27,7 +27,7 @@ def deletepost(id:int,db:Session = Depends(get_db),current_blogger: Blogger = De
    return delete_post(post_id=id,db=db, current_blogger= current_blogger)
 
 @postRouter.get("/read")
-def get_all(db:Session = Depends(get_db)):
+def get_all_route(db:Session = Depends(get_db)):
    return get_all_post(db = db)
 
 @postRouter.get("/by-name/{name}")

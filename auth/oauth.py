@@ -8,6 +8,8 @@ from database.connect import get_db
 from dotenv import load_dotenv
 import os,time
 
+import logging
+
 load_dotenv(override=True)
 
 KEY = os.getenv("SECRET_KEY")
@@ -36,8 +38,9 @@ def get_blogger(token: str = Depends(oauth2_scheme), db: Session = Depends(get_d
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    try:
+    try:     
         payload = jwt.decode(token, KEY, algorithms=[ALGORITHM])
+        print (f"payload is " + payload)
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception

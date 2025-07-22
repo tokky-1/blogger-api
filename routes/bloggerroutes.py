@@ -24,7 +24,7 @@ async def give_token(formdata:OAuth2PasswordRequestForm = Depends(),db:Session =
             "access_token": access_token,
             "token_type": "bearer"
         }
-    return "user not found"
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
 @bloggerRouter.post("/Log-in")
 async def login (name:str,pword:str,db:Session = Depends(get_db)):
@@ -50,3 +50,4 @@ def history(db: Session = Depends(get_db),current_user: Blogger= Depends(get_blo
 @bloggerRouter.get("/by-name/{name}")
 def getBlogger(name,db:Session = Depends(get_db)):
     return get_a_blogger(name,db=db)
+
