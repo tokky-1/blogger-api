@@ -1,11 +1,11 @@
 from fastapi import APIRouter,status,HTTPException,Depends,Form,File,UploadFile
 from typing import List, Optional
 from sqlalchemy.orm import Session 
-from models.postmodel import postModel as PM,updatePostModel as UPM 
+from models.postmodel import updatePostModel as UPM 
 from database.crud import create_post,get_all_post,edit_post,delete_post,get_a_post
 from database.connect import get_db
 from auth.oauth import get_blogger
-from database.model import Post,Blogger
+from database.model import Blogger
 
 postRouter = APIRouter(prefix="/Post")
 @postRouter.post("/create",status_code=status.HTTP_201_CREATED)
