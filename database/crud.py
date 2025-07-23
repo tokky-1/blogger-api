@@ -44,14 +44,17 @@ def sign_in(username:str,password:str , db:Session = Depends(get_db)):
         return verifyhash(password,blogger_db.password)
 
 #edit profile
-def edit_blogger(update,username:str,db:Session=Depends(get_db)):
+def edit_blogger(update,username:str,db:Session=Depends(get_db)):   
    blogger_db = db.query(Blogger).filter(Blogger.username == username).first()
+
    if not blogger_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+   
    for field,value in update.dict(exclude_unset = True).items():
         setattr(blogger_db,field,value)
+        
    db.commit()
-   db.add(blogger_db)
+   db.refresh(blogger_db)
   
    return blogger_db
 
@@ -70,7 +73,9 @@ def get_all_blogger(db:Session):
 def get_a_blogger(blogger_db,db:Session):
    exist =db.query(Blogger).filter(Blogger.username == blogger_db).first()
    if exist :
-      return blogger_db
+      return {
+          "username":blogger_db
+      }
    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 # view post history
