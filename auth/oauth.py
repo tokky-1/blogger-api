@@ -8,7 +8,6 @@ from database.connect import get_db
 from dotenv import load_dotenv
 import os,time
 
-import logging
 
 load_dotenv(override=True)
 
@@ -28,6 +27,8 @@ def create_token(data: dict):
     payload=data.copy()
     expire = datetime.utcnow() + timedelta(minutes=float(EXP))
     payload.update({"exp":expire.timestamp()})
+    if "sub" not in payload:
+        raise ValueError("Token payload must include 'sub' (username)")
     token = jwt.encode(payload, KEY, algorithm=ALGORITHM)
     return token
 
