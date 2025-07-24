@@ -9,7 +9,7 @@ from database.model import Blogger
 
 bloggerRouter = APIRouter(prefix="/User")
   
-@bloggerRouter.post("/Sign-in",status_code=status.HTTP_201_CREATED)
+@bloggerRouter.post("/Sign-up",status_code=status.HTTP_201_CREATED)
 async def create_new_blogger(blogger: CBM,db:Session = Depends(get_db)):
     hashedpassword = createhash(blogger.password)
     return create_blogger(db = db,uname = blogger.username,fname=blogger.fullname,email=blogger.email,pword = hashedpassword)
