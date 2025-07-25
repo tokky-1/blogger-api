@@ -30,6 +30,16 @@ def delete_blogger(db:Session = Depends(get_db),current_blogger: Blogger = Depen
 def getAllBlogger(db:Session = Depends(get_db)):
    return get_all_blogger(db = db)
 
+@bloggerRouter.get("/test")
+def get_by_id(id,db:Session = Depends(get_db)):
+    exist =db.query(Blogger).filter(Blogger.id == id).first()
+    if exist :
+      return {
+          "id":id
+      }
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
 @bloggerRouter.get("/Post-history")
 def history(db: Session = Depends(get_db),current_user: Blogger= Depends(get_blogger)):
     return get_all_posts(db=db,current_blogger= current_user)
