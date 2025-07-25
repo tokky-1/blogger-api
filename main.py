@@ -9,7 +9,7 @@ from auth.oauth import  create_token
 
 import os
 
-app = FastAPI(title="BLOGGER API", description="has the basic functionality of a blog site and some")
+app = FastAPI(title="BLOGGER API", description="has the basic functionality of a blog site ")
 
 port = int(os.environ.get("PORT",5001))
 
@@ -17,7 +17,7 @@ app.add_middleware(ratelimit)
 app.include_router(bloggerroutes.bloggerRouter,tags =["Users"] )
 app.include_router(postroutes.postRouter,tags=["Posts"])
 
-
+ 
 @app.post("/token")
 async def give_token(formdata:OAuth2PasswordRequestForm = Depends(),db:Session = Depends(get_db)):
     user = verify_user(formdata.username,formdata.password,db = db )
