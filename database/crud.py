@@ -175,7 +175,6 @@ def get_a_post(post_db,db:Session,):
    if exist :
       return {
           "TITLE:": Post.title,
-          "CONTENT": Post.content,
-          "UPLOADS":Post.uploads
+          "CONTENT": Post.content
       }
    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
