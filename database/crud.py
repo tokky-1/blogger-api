@@ -178,4 +178,4 @@ def get_a_post(post_db,db:Session,):
             "TITLE:": exist.title,
             "CONTENT": exist.content,
       }
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+   raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
