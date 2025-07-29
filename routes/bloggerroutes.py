@@ -1,4 +1,5 @@
 from fastapi import APIRouter,status,HTTPException,Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session 
 from models.bloggermodel import createBloggertModel as CBM,updateBloggerModel as UBM
 from database.crud import create_blogger,sign_in,edit_blogger,del_blogger,get_all_bloggers,get_a_blogger,get_all_posts
@@ -14,9 +15,13 @@ async def Create_New_Blogger(blogger: CBM,db:Session = Depends(get_db)):
     hashedpassword = createhash(blogger.password)
     return create_blogger(db = db,uname = blogger.username,fname=blogger.fullname,email=blogger.email,pword = hashedpassword)
 
-@bloggerRouter.post("/Log-in")
-def Login (name:str,pword:str,db:Session = Depends(get_db)):
-    return sign_in(username=name,password=pword,db=db)
+@bloggerRouter.post("/token")
+def Login (form_data: OAuth2PasswordRequestForm = Depends(),db:Session = Depends(get_db)):
+    token= sign_in(username=form_data.username,password=form_data.password,db=db)
+    return{
+        "access_token": token,
+        "token_type": "bearer"
+    }
          
 @bloggerRouter.patch("/Update")
 def Update_Blogger(blogger: UBM,db:Session = Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
@@ -38,4 +43,3 @@ def Post_History(db: Session = Depends(get_db),current_user: Blogger= Depends(ge
 @bloggerRouter.get("/Search/By-name/{name}")
 def Get_Blogger(name,db:Session = Depends(get_db)):
     return get_a_blogger(name,db=db)
-

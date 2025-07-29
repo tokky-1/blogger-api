@@ -76,7 +76,7 @@ def get_all_bloggers(db:Session):
     return db.query(Blogger).all()
     
 def get_a_blogger(blogger_db,db:Session):
-   exist =db.query(Blogger).filter(Blogger.username == blogger_db).first()
+   exist = db.query(Blogger).filter(Blogger.username == blogger_db).first()
    if exist :
       return {
           "username":blogger_db
@@ -174,7 +174,8 @@ def get_a_post(post_db,db:Session,):
    exist =db.query(Post).filter(Post.title == post_db).first()
    if exist :
       return {
-          "TITLE:": Post.title,
-          "CONTENT": Post.content
+
+            "TITLE:": exist.title,
+            "CONTENT": exist.content,
       }
-   raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
