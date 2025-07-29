@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from database.model import Blogger
 from database.connect import get_db
 from dotenv import load_dotenv
-import os,time
+import os
 
 
 load_dotenv(override=True)
@@ -15,7 +15,7 @@ KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 EXP = os.getenv("EXPIRE")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/User/token")
 
 token: str = Depends(oauth2_scheme)
 headers = {

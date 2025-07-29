@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from .model import Blogger,Post,PostFile
 from database.connect import get_db
 from auth.hashing import verifyhash
-from auth.oauth import get_blogger
+from auth.oauth import get_blogger,create_token
 from models.bloggermodel import updateBloggerModel as UBM
 import os
 
@@ -41,7 +41,12 @@ def create_blogger(db:Session,uname:str,fname:str,email:str,pword:str):
 def sign_in(username:str,password:str , db:Session = Depends(get_db)):
    blogger_db = db.query(Blogger).filter(Blogger.username == username).first()
    if blogger_db:
-        return verifyhash(password,blogger_db.password)
+      verifyhash(password,blogger_db.password)
+      create_token_credentials = dict
+      create_token_credentials = {
+           "sub":username
+       }
+      return create_token(create_token_credentials)
 
 #edit profile
 def edit_blogger(update,username:str,db:Session=Depends(get_db)):   
@@ -67,11 +72,11 @@ def del_blogger(db:Session,blogger_db):
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-def get_all_blogger(db:Session):
+def get_all_bloggers(db:Session):
     return db.query(Blogger).all()
     
 def get_a_blogger(blogger_db,db:Session):
-   exist =db.query(Blogger).filter(Blogger.username == blogger_db).first()
+   exist = db.query(Blogger).filter(Blogger.username == blogger_db).first()
    if exist :
       return {
           "username":blogger_db
@@ -131,7 +136,7 @@ async def create_post(title,content,acct_id,uploads=None,db: Session = Depends(g
 
    return {"message": "Post created successfully", "post_id": new_post.id}
 
-def get_all_post(db:Session):
+def get_all(db:Session):
    read= db.query(Post).all()
    return read
 
@@ -165,8 +170,12 @@ def delete_post(post_id:int,db:Session=Depends(get_db),current_blogger: Blogger 
    raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
    
     
-def get_a_post(post_db,db:Session):
+def get_a_post(post_db,db:Session,):
    exist =db.query(Post).filter(Post.title == post_db).first()
    if exist :
-      return post_db
+      return {
+
+            "TITLE:": exist.title,
+            "CONTENT": exist.content,
+      }
    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
