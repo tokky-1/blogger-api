@@ -86,6 +86,7 @@ def get_a_blogger(blogger_db,db:Session):
 # view post history
 def get_all_posts(db: Session = Depends(get_db),current_blogger: Blogger= Depends(get_blogger)):
     posts = db.query(Post).filter(Post.author_id == current_blogger.id).all()
+    
     return posts
 
 ##post
@@ -170,12 +171,19 @@ def delete_post(post_id:int,db:Session=Depends(get_db),current_blogger: Blogger 
    raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
    
     
-def get_a_post(post_db,db:Session,):
-   exist =db.query(Post).filter(Post.title == post_db).first()
-   if exist :
-      return {
-
-            "TITLE:": exist.title,
-            "CONTENT": exist.content,
-      }
-   raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+def get_a_post(post_db: str ,db:Session,):
+   post_db = db.query(Post).filter(Post.title == post_db).first()
+   if not post_db:
+        raise HTTPException(status_code=404, detail="Post not found")
+   files = db.query(PostFile).filter(PostFile.post_id == Post.id).all()
+   return {
+        "id": post_db.id,
+        "title": post_db.title,
+        "content": post_db.content,
+        "uploads": [
+            {
+                "filename": f.filename,
+                "content_type": f.content_type
+            } for f in files
+        ]
+    }
