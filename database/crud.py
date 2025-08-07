@@ -129,7 +129,7 @@ async def create_post(title,content,acct_id,uploads=None,db: Session = Depends(g
 
                 uploaded_files.append({
                     "filename": file.filename,
-                    "url": public_url,
+                    "file_path": public_url,
                     "content_type": file.content_type,
                 })
 
@@ -196,7 +196,7 @@ def get_a_post(post_db: str ,db:Session,):
    post_db = db.query(Post).filter(Post.title == post_db).first()
    if not post_db:
         raise HTTPException(status_code=404, detail="Post not found")
-   files = db.query(PostFile).filter(PostFile.post_id == Post.id).all()
+   files = db.query(PostFile).filter(PostFile.post_id == post_db.id).all()
    return {
         "id": post_db.id,
         "title": post_db.title,
