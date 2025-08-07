@@ -27,13 +27,12 @@ class Post(base):
 
 class PostFile(base):
     __tablename__ = "post_files"
-
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, nullable=False)
     content_type = Column(String)
-    file_data = Column(LargeBinary, nullable=False)
-
+    file_path = Column(String, nullable=False)
     post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
+    
     post = relationship("Post", back_populates="files")
     
 base.metadata.create_all(bind=engine) 

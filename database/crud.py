@@ -1,12 +1,12 @@
 from fastapi import  HTTPException,status,Depends, UploadFile, File, Form
-
 from sqlalchemy.orm import Session 
 from .model import Blogger,Post,PostFile
 from database.connect import get_db
 from auth.hashing import verifyhash
 from auth.oauth import get_blogger,create_token
 from models.bloggermodel import updateBloggerModel as UBM
-import os
+import os,uuid
+from uploads.supabase_config import supabase, SUPABASE_BUCKET
 
 def verify_user(username:str,password:str,db:Session = Depends(get_db)):
    blogger = db.query(Blogger).filter(Blogger.username == username).first()
@@ -93,9 +93,11 @@ def get_all_posts(db: Session = Depends(get_db),current_blogger: Blogger= Depend
 
 MAX_TOTAL_SIZE = 10 * 1024 * 1024  # 10MB
 ALLOWED_EXTENSIONS = { ".jpg", ".jpeg", ".png", ".gif",".mp4", ".avi", ".mov",".pdf", ".docx", ".txt"}
+#UPLOAD_DIR = "uploads"
+
 async def create_post(title,content,acct_id,uploads=None,db: Session = Depends(get_db)):
    total_size = 0
-   saved_files = []
+   uploaded_files = []
 
     # Read and validates all files 
    if uploads:
@@ -111,11 +113,30 @@ async def create_post(title,content,acct_id,uploads=None,db: Session = Depends(g
          if ext not in ALLOWED_EXTENSIONS:
                 raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.filename}")
 
-         saved_files.append({
-                "filename": file.filename,
-                "content_type": file.content_type,
-                "data": content_data
-            })
+         filename = f"{uuid.uuid4()}{ext}"
+         try:
+                response = supabase.storage.from_(SUPABASE_BUCKET).upload(
+                    path=filename,
+                    file=content_data,
+                    file_options={"content-type": file.content_type},
+                   
+                )
+
+                if not response:
+                    raise HTTPException(status_code=500, detail="Upload failed")
+
+                public_url = f"{supabase.storage.from_(SUPABASE_BUCKET).get_public_url(filename)}"
+
+                uploaded_files.append({
+                    "filename": file.filename,
+                    "url": public_url,
+                    "content_type": file.content_type,
+                })
+
+         except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Supabase upload failed: {str(e)}")
+
+       
 
     # Save post
    new_post = Post(title=title, content=content, author_id=acct_id)
@@ -123,11 +144,11 @@ async def create_post(title,content,acct_id,uploads=None,db: Session = Depends(g
    db.flush()  # Ensure we get post.id
 
     # Save files validated
-   for file in saved_files:
+   for file in uploaded_files:
         db_file = PostFile(
             filename=file["filename"],
             content_type=file["content_type"],
-            file_data=file["data"],
+            file_path=file["file_path"],
             post_id=new_post.id
         )
         db.add(db_file)
@@ -140,7 +161,7 @@ async def create_post(title,content,acct_id,uploads=None,db: Session = Depends(g
 def get_all(db:Session):
    read= db.query(Post).all()
    return read
-
+  
 def edit_post(post_id:int, updated_data,db:Session=Depends(get_db),current_blogger: Blogger = Depends(get_blogger)):
    post_query = db.query(Post).filter(Post.id == post_id).first()
    
