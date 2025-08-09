@@ -6,7 +6,11 @@ import os
 load_dotenv(override=True)
 
 DB_URL =os.getenv("DB_URL")
-engine = create_engine(DB_URL,echo=True)
+engine = create_engine(
+    DB_URL,
+    echo=True,
+    connect_args={"sslmode": "require"}
+)
 sessionlocal = sessionmaker(bind = engine)
 
 def get_db():
